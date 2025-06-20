@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DIG Tool v2</title>
+  <title>DIG Tool v3</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-6 font-sans">
   <div class="max-w-xl mx-auto bg-white shadow-md rounded-xl p-6">
-    <h1 class="text-2xl font-bold mb-4 text-center">DIG Tool v2</h1>
+    <h1 class="text-2xl font-bold mb-4 text-center">DIG Tool v3</h1>
 
     <div class="mb-4">
       <label for="domain" class="block font-medium mb-1">Domain</label>
@@ -19,6 +19,7 @@
     <div class="mb-4">
       <label for="type" class="block font-medium mb-1">Record Type</label>
       <select id="type" class="w-full border border-gray-300 rounded px-3 py-2">
+        <option value="ALL">ALL</option>
         <option value="A">A</option>
         <option value="AAAA">AAAA</option>
         <option value="MX">MX</option>
@@ -26,6 +27,14 @@
         <option value="TXT">TXT</option>
         <option value="CNAME">CNAME</option>
         <option value="SOA">SOA</option>
+      </select>
+    </div>
+
+    <div class="mb-4">
+      <label for="resolver" class="block font-medium mb-1">DNS Resolver</label>
+      <select id="resolver" class="w-full border border-gray-300 rounded px-3 py-2">
+        <option value="https://dns.google/resolve">Google (8.8.8.8)</option>
+        <option value="https://cloudflare-dns.com/dns-query">Cloudflare (1.1.1.1)</option>
       </select>
     </div>
 
@@ -38,9 +47,12 @@
   </div>
 
   <script>
+    const recordTypes = ["A", "AAAA", "MX", "NS", "TXT", "CNAME", "SOA"];
+
     async function dig() {
       const domain = document.getElementById("domain").value.trim();
       const type = document.getElementById("type").value;
+      const resolver = document.getElementById("resolver").value;
       const output = document.getElementById("output");
 
       if (!domain) {
@@ -48,25 +60,37 @@
         return;
       }
 
-      const url = `https://dns.google/resolve?name=${domain}&type=${type}`;
+      let result = "";
+      const typesToQuery = type === "ALL" ? recordTypes : [type];
 
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        let result = `;; Query for: ${domain} (${type})\n`;
+      for (const t of typesToQuery) {
+        const url = resolver.includes("cloudflare") 
+          ? `${resolver}?name=${domain}&type=${t}`
+          : `${resolver}?name=${domain}&type=${t}`;
 
-        if (data.Answer) {
-          for (const ans of data.Answer) {
-            result += `${ans.name} ${ans.TTL} IN ${type} ${ans.data}\n`;
+        try {
+          const res = await fetch(url, {
+            headers: resolver.includes("cloudflare") ? {
+              'accept': 'application/dns-json'
+            } : {}
+          });
+          const data = await res.json();
+          result += `;; Query for: ${domain} (${t})\n`;
+
+          if (data.Answer) {
+            for (const ans of data.Answer) {
+              result += `${ans.name} ${ans.TTL} IN ${t} ${ans.data}\n`;
+            }
+          } else {
+            result += ";; No answer found.\n";
           }
-        } else {
-          result += ";; No answer found.";
+          result += "\n";
+        } catch (err) {
+          result += `;; Error fetching ${t} record: ${err}\n\n`;
         }
-
-        output.textContent = result;
-      } catch (err) {
-        output.textContent = "Error: " + err;
       }
+
+      output.textContent = result;
     }
   </script>
 </body>
