@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DIG Tool v3</title>
+  <title>Sunit's Dig Tool v4</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-6 font-sans">
-  <div class="max-w-xl mx-auto bg-white shadow-md rounded-xl p-6">
-    <h1 class="text-2xl font-bold mb-4 text-center">DIG Tool v3</h1>
+  <div class="max-w-2xl mx-auto bg-white shadow-md rounded-xl p-6">
+    <h1 class="text-3xl font-bold mb-4 text-center">Sunit's Dig Tool</h1>
 
     <div class="mb-4">
       <label for="domain" class="block font-medium mb-1">Domain</label>
@@ -16,34 +16,46 @@
              class="w-full border border-gray-300 rounded px-3 py-2" />
     </div>
 
-    <div class="mb-4">
-      <label for="type" class="block font-medium mb-1">Record Type</label>
-      <select id="type" class="w-full border border-gray-300 rounded px-3 py-2">
-        <option value="ALL">ALL</option>
-        <option value="A">A</option>
-        <option value="AAAA">AAAA</option>
-        <option value="MX">MX</option>
-        <option value="NS">NS</option>
-        <option value="TXT">TXT</option>
-        <option value="CNAME">CNAME</option>
-        <option value="SOA">SOA</option>
-      </select>
+    <div class="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label for="type" class="block font-medium mb-1">Record Type</label>
+        <select id="type" class="w-full border border-gray-300 rounded px-3 py-2">
+          <option value="ALL">ALL</option>
+          <option value="A">A</option>
+          <option value="AAAA">AAAA</option>
+          <option value="MX">MX</option>
+          <option value="NS">NS</option>
+          <option value="TXT">TXT</option>
+          <option value="CNAME">CNAME</option>
+          <option value="SOA">SOA</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="resolver" class="block font-medium mb-1">DNS Resolver</label>
+        <select id="resolver" class="w-full border border-gray-300 rounded px-3 py-2">
+          <option value="https://dns.google/resolve">Google (8.8.8.8)</option>
+          <option value="https://cloudflare-dns.com/dns-query">Cloudflare (1.1.1.1)</option>
+        </select>
+      </div>
     </div>
 
-    <div class="mb-4">
-      <label for="resolver" class="block font-medium mb-1">DNS Resolver</label>
-      <select id="resolver" class="w-full border border-gray-300 rounded px-3 py-2">
-        <option value="https://dns.google/resolve">Google (8.8.8.8)</option>
-        <option value="https://cloudflare-dns.com/dns-query">Cloudflare (1.1.1.1)</option>
-      </select>
+    <div class="flex items-center mb-4">
+      <input id="jsonToggle" type="checkbox" class="mr-2" />
+      <label for="jsonToggle">Show Raw JSON</label>
     </div>
 
     <button onclick="dig()"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded w-full">
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded w-full mb-4">
       DIG
     </button>
 
-    <pre id="output" class="bg-gray-100 p-4 mt-6 rounded text-sm whitespace-pre-wrap h-64 overflow-auto"></pre>
+    <div class="flex justify-end gap-4 mb-2">
+      <button onclick="copyOutput()" class="text-sm text-blue-600 hover:underline">Copy</button>
+      <button onclick="downloadOutput()" class="text-sm text-blue-600 hover:underline">Download</button>
+    </div>
+
+    <pre id="output" class="bg-gray-100 p-4 rounded text-sm whitespace-pre-wrap h-80 overflow-auto"></pre>
   </div>
 
   <script>
@@ -53,6 +65,7 @@
       const domain = document.getElementById("domain").value.trim();
       const type = document.getElementById("type").value;
       const resolver = document.getElementById("resolver").value;
+      const showJSON = document.getElementById("jsonToggle").checked;
       const output = document.getElementById("output");
 
       if (!domain) {
@@ -60,11 +73,12 @@
         return;
       }
 
+      output.textContent = "Querying...";
       let result = "";
       const typesToQuery = type === "ALL" ? recordTypes : [type];
 
       for (const t of typesToQuery) {
-        const url = resolver.includes("cloudflare") 
+        const url = resolver.includes("cloudflare")
           ? `${resolver}?name=${domain}&type=${t}`
           : `${resolver}?name=${domain}&type=${t}`;
 
@@ -75,22 +89,42 @@
             } : {}
           });
           const data = await res.json();
-          result += `;; Query for: ${domain} (${t})\n`;
 
-          if (data.Answer) {
-            for (const ans of data.Answer) {
-              result += `${ans.name} ${ans.TTL} IN ${t} ${ans.data}\n`;
-            }
+          if (showJSON) {
+            result += `;; JSON for ${t} Record\n` + JSON.stringify(data, null, 2) + "\n\n";
           } else {
-            result += ";; No answer found.\n";
+            result += `;; Query for: ${domain} (${t})\n`;
+            if (data.Answer) {
+              for (const ans of data.Answer) {
+                result += `${ans.name} ${ans.TTL} IN ${t} ${ans.data}\n`;
+              }
+            } else {
+              result += ";; No answer found.\n";
+            }
+            result += "\n";
           }
-          result += "\n";
         } catch (err) {
           result += `;; Error fetching ${t} record: ${err}\n\n`;
         }
       }
 
       output.textContent = result;
+    }
+
+    function copyOutput() {
+      const text = document.getElementById("output").textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Output copied to clipboard.");
+      });
+    }
+
+    function downloadOutput() {
+      const text = document.getElementById("output").textContent;
+      const blob = new Blob([text], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "dig-output.txt";
+      link.click();
     }
   </script>
 </body>
