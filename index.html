@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DIG Tool v1</title>
+</head>
+<body>
+  <h1>DIG Tool v1</h1>
+  <input type="text" id="domain" placeholder="Enter domain (e.g. example.com)" />
+  <button onclick="dig()">DIG</button>
+  <pre id="output" style="white-space: pre-wrap; margin-top: 1em;"></pre>
+
+  <script>
+    async function dig() {
+      const domain = document.getElementById("domain").value.trim();
+      if (!domain) {
+        alert("Please enter a domain.");
+        return;
+      }
+
+      const url = `https://dns.google/resolve?name=${domain}&type=A`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        let output = `;; Query for: ${domain}\n`;
+
+        if (data.Answer) {
+          for (const ans of data.Answer) {
+            output += `${ans.name} ${ans.TTL} IN ${ans.type} ${ans.data}\n`;
+          }
+        } else {
+          output += ";; No answer found.";
+        }
+
+        document.getElementById("output").textContent = output;
+      } catch (err) {
+        document.getElementById("output").textContent = "Error: " + err;
+      }
+    }
+  </script>
+</body>
+</html>
