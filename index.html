@@ -167,10 +167,23 @@
       saveHistory(domain);
     }
 
-    async function fetchWhois(domain) {
+    
+function getBaseDomain(domain) {
+  const parts = domain.split(".");
+  if (parts.length <= 2) return domain;
+  const tlds = ["com", "org", "net", "edu", "gov", "co", "io", "in", "us", "uk"];
+  if (tlds.includes(parts[parts.length - 2])) {
+    return parts.slice(-3).join(".");
+  }
+  return parts.slice(-2).join(".");
+}
+
+async function fetchWhois(domain) {
+  const baseDomain = getBaseDomain(domain);
+
       const whoisOutput = document.getElementById("whoisOutput");
       try {
-        const res = await fetch(`https://rdap.org/domain/${domain}`);
+        const res = await fetch(`https://rdap.org/domain/${baseDomain}`);
         const data = await res.json();
 
         const readable = [];
