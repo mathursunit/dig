@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sunit's Dig Tool v8</title>
+  <title>Sunit's Dig Tool v10</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-4 font-sans">
-  <div class="max-w-2xl mx-auto bg-white shadow rounded-xl p-4 sm:p-6">
+  <div class="max-w-3xl mx-auto bg-white shadow rounded-xl p-4 sm:p-6">
     <h1 class="text-2xl sm:text-3xl font-bold mb-4 text-center">Sunit's Dig Tool</h1>
 
     <div class="space-y-4">
@@ -64,7 +64,15 @@
         <button onclick="downloadOutput()" class="text-blue-600 hover:underline">Download</button>
       </div>
 
-      <pre id="output" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-72 overflow-auto"></pre>
+      <div>
+        <h2 class="font-semibold mt-4 mb-1">DNS Output</h2>
+        <pre id="output" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-64 overflow-auto"></pre>
+      </div>
+
+      <div>
+        <h2 class="font-semibold mt-4 mb-1">TLD WHOIS Output</h2>
+        <pre id="whoisOutput" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-40 overflow-auto">WHOIS lookup will appear here after a query.</pre>
+      </div>
     </div>
   </div>
 
@@ -113,6 +121,7 @@
       const resolver = document.getElementById("resolver").value;
       const showJSON = document.getElementById("jsonToggle").checked;
       const output = document.getElementById("output");
+      const whoisOutput = document.getElementById("whoisOutput");
 
       if (!domain) {
         alert("Please enter or select a domain.");
@@ -120,6 +129,7 @@
       }
 
       output.textContent = "Querying...";
+      whoisOutput.textContent = "Fetching TLD WHOIS...";
       let result = "";
       const typesToQuery = type === "ALL" ? recordTypes : [type];
 
@@ -130,16 +140,18 @@
 
         try {
           const res = await fetch(url, {
-            headers: resolver.includes("cloudflare") ? {
-              'accept': 'application/dns-json'
-            } : {}
+            headers: resolver.includes("cloudflare") ? { 'accept': 'application/dns-json' } : {}
           });
           const data = await res.json();
 
+          result += `;; Query for: ${domain} (${t})\n`;
+          if (data.AD !== undefined) {
+            result += `;; DNSSEC: ${data.AD ? "Authenticated" : "Not authenticated"}\n`;
+          }
+
           if (showJSON) {
-            result += `;; JSON for ${t} Record\n` + JSON.stringify(data, null, 2) + "\n\n";
+            result += JSON.stringify(data, null, 2) + "\n\n";
           } else {
-            result += `;; Query for: ${domain} (${t})\n`;
             if (data.Answer) {
               for (const ans of data.Answer) {
                 result += `${ans.name} ${ans.TTL} IN ${t} ${ans.data}\n`;
@@ -155,7 +167,21 @@
       }
 
       output.textContent = result;
+      fetchWhois(domain);
       saveHistory(domain);
+    }
+
+    async function fetchWhois(domain) {
+      const whoisOutput = document.getElementById("whoisOutput");
+      const tld = domain.split('.').pop();
+
+      try {
+        const res = await fetch(`https://rdap.org/domain/${tld}`);
+        const data = await res.json();
+        whoisOutput.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        whoisOutput.textContent = "WHOIS lookup failed or not supported for this TLD.";
+      }
     }
 
     function copyOutput() {
