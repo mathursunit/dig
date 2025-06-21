@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sunit's Dig Tool v10</title>
+  <title>Sunit's Dig Tool v11</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-4 font-sans">
@@ -70,7 +70,7 @@
       </div>
 
       <div>
-        <h2 class="font-semibold mt-4 mb-1">TLD WHOIS Output</h2>
+        <h2 class="font-semibold mt-4 mb-1">Domain WHOIS Output</h2>
         <pre id="whoisOutput" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-40 overflow-auto">WHOIS lookup will appear here after a query.</pre>
       </div>
     </div>
@@ -129,7 +129,7 @@
       }
 
       output.textContent = "Querying...";
-      whoisOutput.textContent = "Fetching TLD WHOIS...";
+      whoisOutput.textContent = "Fetching WHOIS for full domain...";
       let result = "";
       const typesToQuery = type === "ALL" ? recordTypes : [type];
 
@@ -173,14 +173,13 @@
 
     async function fetchWhois(domain) {
       const whoisOutput = document.getElementById("whoisOutput");
-      const tld = domain.split('.').pop();
 
       try {
-        const res = await fetch(`https://rdap.org/domain/${tld}`);
+        const res = await fetch(`https://rdap.org/domain/${domain}`);
         const data = await res.json();
         whoisOutput.textContent = JSON.stringify(data, null, 2);
       } catch (err) {
-        whoisOutput.textContent = "WHOIS lookup failed or not supported for this TLD.";
+        whoisOutput.textContent = "WHOIS lookup failed or not supported for this domain.";
       }
     }
 
