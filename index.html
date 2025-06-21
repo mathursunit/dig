@@ -3,12 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sunit's Dig Tool v15</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Sunit's Dig Tool v16</title>
+  <script src="https://cdn.tailwindcss.com">
+  function getBaseDomain(domain) {
+    const parts = domain.split(".");
+    return parts.length > 2 ? parts.slice(-2).join(".") : domain;
+  }
+</script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-4 font-sans">
   <div class="max-w-3xl mx-auto bg-white shadow rounded-xl p-4 sm:p-6">
-    <h1 class="text-2xl sm:text-3xl font-bold mb-4 text-center">Sunit's Dig Tool v15</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold mb-4 text-center">Sunit's Dig Tool</h1>
 
     <div class="space-y-4">
       <div>
@@ -80,10 +85,6 @@
   </div>
 
   <script>
-  function getBaseDomain(domain) {
-    const parts = domain.split(".");
-    return parts.length > 2 ? parts.slice(-2).join(".") : domain;
-  }
     const recordTypes = ["A", "AAAA", "MX", "NS", "TXT", "CNAME", "SOA"];
 
     function populateHistoryDropdown() {
@@ -182,7 +183,7 @@
     function fetchWhois(domain) {
       const whoisOutput = document.getElementById("whoisOutput");
       try {
-        const res = await fetch(`https://rdap.org/domain/${getBaseDomain(domain)}`);
+        const res = await const base = getBaseDomain(domain); const res = await fetch(`https://rdap.org/domain/${base}`);;
         const data = await res.json();
 
         const readable = [];
@@ -248,13 +249,14 @@
     }
 
     populateHistoryDropdown();
-  </script>
-
-<script>
+  
   function getBaseDomain(domain) {
     const parts = domain.split(".");
     return parts.length > 2 ? parts.slice(-2).join(".") : domain;
   }
+</script>
+
+<script>
   function showTab(tab) {
     document.getElementById('tab-dns').classList.remove('text-gray-600', 'hover:text-blue-600');
     document.getElementById('tab-whois').classList.remove('text-gray-600', 'hover:text-blue-600');
@@ -273,6 +275,11 @@
       document.getElementById('tab-whois').classList.remove('text-gray-600');
       document.getElementById('tab-content-whois').classList.remove('hidden');
     }
+  }
+
+  function getBaseDomain(domain) {
+    const parts = domain.split(".");
+    return parts.length > 2 ? parts.slice(-2).join(".") : domain;
   }
 </script>
 </body>
