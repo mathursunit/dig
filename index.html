@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sunit's Dig Tool v11</title>
+  <title>Sunit's Dig Tool v12</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-4 font-sans">
@@ -71,7 +71,7 @@
 
       <div>
         <h2 class="font-semibold mt-4 mb-1">Domain WHOIS Output</h2>
-        <pre id="whoisOutput" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-40 overflow-auto">WHOIS lookup will appear here after a query.</pre>
+        <pre id="whoisOutput" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-64 overflow-auto">WHOIS lookup will appear here after a query.</pre>
       </div>
     </div>
   </div>
@@ -82,9 +82,7 @@
     function populateHistoryDropdown() {
       const history = JSON.parse(localStorage.getItem("digHistory")) || [];
       const domainSelect = document.getElementById("domain");
-
       domainSelect.innerHTML = '<option value="" disabled selected>Select or enter domain...</option>';
-
       history.forEach(entry => {
         const option = document.createElement("option");
         option.value = entry;
@@ -129,7 +127,7 @@
       }
 
       output.textContent = "Querying...";
-      whoisOutput.textContent = "Fetching WHOIS for full domain...";
+      whoisOutput.textContent = "Fetching WHOIS info...";
       let result = "";
       const typesToQuery = type === "ALL" ? recordTypes : [type];
 
@@ -143,12 +141,10 @@
             headers: resolver.includes("cloudflare") ? { 'accept': 'application/dns-json' } : {}
           });
           const data = await res.json();
-
           result += `;; Query for: ${domain} (${t})\n`;
           if (data.AD !== undefined) {
             result += `;; DNSSEC: ${data.AD ? "Authenticated" : "Not authenticated"}\n`;
           }
-
           if (showJSON) {
             result += JSON.stringify(data, null, 2) + "\n\n";
           } else {
@@ -173,11 +169,36 @@
 
     async function fetchWhois(domain) {
       const whoisOutput = document.getElementById("whoisOutput");
-
       try {
         const res = await fetch(`https://rdap.org/domain/${domain}`);
         const data = await res.json();
-        whoisOutput.textContent = JSON.stringify(data, null, 2);
+
+        const readable = [];
+        if (data.ldhName) readable.push(`Domain: ${data.ldhName}`);
+        if (data.status) readable.push(`Status: ${data.status.join(", ")}`);
+        if (data.nameservers) {
+          readable.push("Nameservers:");
+          data.nameservers.forEach(ns => readable.push(`  - ${ns.ldhName}`));
+        }
+        if (data.entities) {
+          data.entities.forEach(ent => {
+            readable.push(`Entity: ${ent.handle}`);
+            if (ent.roles) readable.push(`  Roles: ${ent.roles.join(", ")}`);
+            if (ent.vcardArray && ent.vcardArray[1]) {
+              ent.vcardArray[1].forEach(v => {
+                if (v[0] === 'fn') readable.push(`  Name: ${v[3]}`);
+                if (v[0] === 'email') readable.push(`  Email: ${v[3]}`);
+              });
+            }
+          });
+        }
+        if (data.events) {
+          data.events.forEach(e => {
+            readable.push(`Event: ${e.eventAction} - ${e.eventDate}`);
+          });
+        }
+
+        whoisOutput.textContent = readable.join("\n") || "No WHOIS data found.";
       } catch (err) {
         whoisOutput.textContent = "WHOIS lookup failed or not supported for this domain.";
       }
@@ -185,9 +206,7 @@
 
     function copyOutput() {
       const text = document.getElementById("output").textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        alert("Output copied to clipboard.");
-      });
+      navigator.clipboard.writeText(text).then(() => alert("Output copied to clipboard."));
     }
 
     function downloadOutput() {
