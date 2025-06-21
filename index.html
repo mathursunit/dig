@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sunit's Dig Tool v6</title>
+  <title>Sunit's Dig Tool v7</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-4 font-sans">
@@ -13,8 +13,10 @@
     <div class="space-y-4">
       <div>
         <label for="domain" class="block font-medium mb-1">Domain</label>
-        <input type="text" id="domain" placeholder="e.g. example.com"
-               class="w-full border border-gray-300 rounded px-3 py-2 text-base" />
+        <select id="domain" class="w-full border border-gray-300 rounded px-3 py-2 text-base">
+          <option value="" disabled selected>Select or enter domain...</option>
+        </select>
+        <input type="text" id="newDomain" placeholder="Or type new domain" class="mt-2 w-full border border-gray-300 rounded px-3 py-2 text-base" />
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -46,10 +48,16 @@
         <label for="jsonToggle" class="text-sm sm:text-base">Show Raw JSON</label>
       </div>
 
-      <button onclick="dig()"
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded text-base">
-        DIG
-      </button>
+      <div class="flex justify-between">
+        <button onclick="dig()"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded text-base">
+          DIG
+        </button>
+        <button onclick="clearHistory()"
+                class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded text-base">
+          Clear History
+        </button>
+      </div>
 
       <div class="flex justify-end gap-4 text-sm mt-2">
         <button onclick="copyOutput()" class="text-blue-600 hover:underline">Copy</button>
@@ -57,26 +65,42 @@
       </div>
 
       <pre id="output" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-72 overflow-auto"></pre>
-
-      <div class="mt-6">
-        <h2 class="text-lg font-semibold mb-2">Saved History</h2>
-        <ul id="historyList" class="list-disc list-inside text-sm space-y-1"></ul>
-      </div>
     </div>
   </div>
 
   <script>
     const recordTypes = ["A", "AAAA", "MX", "NS", "TXT", "CNAME", "SOA"];
 
+    function populateHistoryDropdown() {
+      const history = JSON.parse(localStorage.getItem("digHistory")) || [];
+      const domainSelect = document.getElementById("domain");
+
+      // Clear previous options
+      domainSelect.innerHTML = '<option value="" disabled selected>Select or enter domain...</option>';
+
+      history.forEach(entry => {
+        const option = document.createElement("option");
+        option.value = entry;
+        option.textContent = entry;
+        domainSelect.appendChild(option);
+      });
+    }
+
+    function getSelectedDomain() {
+      const dropdownValue = document.getElementById("domain").value;
+      const textValue = document.getElementById("newDomain").value.trim();
+      return textValue || dropdownValue;
+    }
+
     async function dig() {
-      const domain = document.getElementById("domain").value.trim();
+      const domain = getSelectedDomain();
       const type = document.getElementById("type").value;
       const resolver = document.getElementById("resolver").value;
       const showJSON = document.getElementById("jsonToggle").checked;
       const output = document.getElementById("output");
 
       if (!domain) {
-        alert("Please enter a domain.");
+        alert("Please enter or select a domain.");
         return;
       }
 
@@ -116,7 +140,7 @@
       }
 
       output.textContent = result;
-      saveHistory(domain, type);
+      saveHistory(domain);
     }
 
     function copyOutput() {
@@ -135,31 +159,25 @@
       link.click();
     }
 
-    function saveHistory(domain, type) {
+    function saveHistory(domain) {
       const key = "digHistory";
-      const entry = `${domain} (${type})`;
       let history = JSON.parse(localStorage.getItem(key)) || [];
-      if (!history.includes(entry)) {
-        history.unshift(entry);
+      if (!history.includes(domain)) {
+        history.unshift(domain);
         if (history.length > 10) history.pop();
         localStorage.setItem(key, JSON.stringify(history));
-        renderHistory();
+        populateHistoryDropdown();
       }
     }
 
-    function renderHistory() {
-      const key = "digHistory";
-      const historyList = document.getElementById("historyList");
-      const history = JSON.parse(localStorage.getItem(key)) || [];
-      historyList.innerHTML = "";
-      history.forEach(entry => {
-        const li = document.createElement("li");
-        li.textContent = entry;
-        historyList.appendChild(li);
-      });
+    function clearHistory() {
+      localStorage.removeItem("digHistory");
+      populateHistoryDropdown();
+      alert("History cleared.");
     }
 
-    renderHistory();
+    // Initialize dropdown on load
+    populateHistoryDropdown();
   </script>
 </body>
 </html>
