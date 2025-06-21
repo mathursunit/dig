@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sunit's Dig Tool v7</title>
+  <title>Sunit's Dig Tool v8</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-4 font-sans">
@@ -13,10 +13,10 @@
     <div class="space-y-4">
       <div>
         <label for="domain" class="block font-medium mb-1">Domain</label>
-        <select id="domain" class="w-full border border-gray-300 rounded px-3 py-2 text-base">
+        <select id="domain" class="w-full border border-gray-300 rounded px-3 py-2 text-base" onchange="autoQueryDropdown()">
           <option value="" disabled selected>Select or enter domain...</option>
         </select>
-        <input type="text" id="newDomain" placeholder="Or type new domain" class="mt-2 w-full border border-gray-300 rounded px-3 py-2 text-base" />
+        <input type="text" id="newDomain" placeholder="Or type new domain" class="mt-2 w-full border border-gray-300 rounded px-3 py-2 text-base" onkeydown="handleEnter(event)" />
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -75,7 +75,6 @@
       const history = JSON.parse(localStorage.getItem("digHistory")) || [];
       const domainSelect = document.getElementById("domain");
 
-      // Clear previous options
       domainSelect.innerHTML = '<option value="" disabled selected>Select or enter domain...</option>';
 
       history.forEach(entry => {
@@ -84,6 +83,22 @@
         option.textContent = entry;
         domainSelect.appendChild(option);
       });
+    }
+
+    function autoQueryDropdown() {
+      const domain = document.getElementById("domain").value;
+      if (domain) {
+        document.getElementById("newDomain").value = "";
+        dig();
+      }
+    }
+
+    function handleEnter(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        document.getElementById("domain").selectedIndex = 0;
+        dig();
+      }
     }
 
     function getSelectedDomain() {
@@ -176,7 +191,6 @@
       alert("History cleared.");
     }
 
-    // Initialize dropdown on load
     populateHistoryDropdown();
   </script>
 </body>
