@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sunit's Dig Tool v12</title>
+  <title>Sunit's Dig Tool v14</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-4 font-sans">
@@ -64,14 +64,17 @@
         <button onclick="downloadOutput()" class="text-blue-600 hover:underline">Download</button>
       </div>
 
-      <div>
-        <h2 class="font-semibold mt-4 mb-1">DNS Output</h2>
-        <pre id="output" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-64 overflow-auto"></pre>
-      </div>
-
-      <div>
-        <h2 class="font-semibold mt-4 mb-1">Domain WHOIS Output</h2>
-        <pre id="whoisOutput" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-64 overflow-auto">WHOIS lookup will appear here after a query.</pre>
+      <div class="mt-4">
+        <div class="flex border-b border-gray-300 mb-2">
+          <button id="tab-dns" class="py-2 px-4 text-sm sm:text-base font-semibold border-b-2 border-blue-600" onclick="showTab('dns')">DNS Output</button>
+          <button id="tab-whois" class="py-2 px-4 text-sm sm:text-base font-semibold text-gray-600 hover:text-blue-600" onclick="showTab('whois')">WHOIS Output</button>
+        </div>
+        <div id="tab-content-dns" class="block">
+          <pre id="output" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-64 overflow-auto"></pre>
+        </div>
+        <div id="tab-content-whois" class="hidden">
+          <pre id="whoisOutput" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-64 overflow-auto">WHOIS lookup will appear here after a query.</pre>
+        </div>
       </div>
     </div>
   </div>
@@ -242,5 +245,27 @@
 
     populateHistoryDropdown();
   </script>
+
+<script>
+  function showTab(tab) {
+    document.getElementById('tab-dns').classList.remove('text-gray-600', 'hover:text-blue-600');
+    document.getElementById('tab-whois').classList.remove('text-gray-600', 'hover:text-blue-600');
+    document.getElementById('tab-dns').classList.remove('border-b-2', 'border-blue-600');
+    document.getElementById('tab-whois').classList.remove('border-b-2', 'border-blue-600');
+
+    document.getElementById('tab-content-dns').classList.add('hidden');
+    document.getElementById('tab-content-whois').classList.add('hidden');
+
+    if (tab === 'dns') {
+      document.getElementById('tab-dns').classList.add('border-b-2', 'border-blue-600');
+      document.getElementById('tab-dns').classList.remove('text-gray-600');
+      document.getElementById('tab-content-dns').classList.remove('hidden');
+    } else {
+      document.getElementById('tab-whois').classList.add('border-b-2', 'border-blue-600');
+      document.getElementById('tab-whois').classList.remove('text-gray-600');
+      document.getElementById('tab-content-whois').classList.remove('hidden');
+    }
+  }
+</script>
 </body>
 </html>
