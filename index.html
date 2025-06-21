@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sunit's Dig Tool v20</title>
+  <title>Sunit's Dig Tool v18</title>
   <script src="https://cdn.tailwindcss.com">
   function showTab(tab) {
     document.getElementById('tab-dns').classList.remove('text-gray-600', 'hover:text-blue-600', 'border-b-2', 'border-blue-600');
@@ -19,39 +19,11 @@
       document.getElementById('tab-content-whois').classList.remove('hidden');
     }
   }
-
-  function showTab(tab) {
-    ['dns', 'whois', 'ip'].forEach(t => {
-      document.getElementById(`tab-${t}`).classList.remove('border-b-2', 'border-blue-600', 'text-gray-600');
-      document.getElementById(`tab-content-${t}`).classList.add('hidden');
-    });
-
-    document.getElementById(`tab-${tab}`).classList.add('border-b-2', 'border-blue-600');
-    document.getElementById(`tab-${tab}`).classList.remove('text-gray-600');
-    document.getElementById(`tab-content-${tab}`).classList.remove('hidden');
-
-    if (tab === 'ip') {
-      fetchPublicIP();
-    }
-  }
-
-  function fetchPublicIP() {
-    const ipBox = document.getElementById("ipOutput");
-    ipBox.textContent = "Fetching your public IP...";
-    fetch("https://api.ipify.org?format=json")
-      .then(res => res.json())
-      .then(data => {
-        ipBox.textContent = `Your Public IP: ${data.ip}`;
-      })
-      .catch(err => {
-        ipBox.textContent = "Could not fetch IP address.";
-      });
-  }
 </script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-4 font-sans">
   <div class="max-w-3xl mx-auto bg-white shadow rounded-xl p-4 sm:p-6">
-    <h1 class="text-2xl sm:text-3xl font-bold mb-4 text-center">Sunit's Dig Tool v20</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold mb-4 text-center">Sunit's Dig Tool v18</h1>
 
     <div class="space-y-4">
       <div>
@@ -109,10 +81,6 @@
 
       <div class="mt-4">
         <div class="flex border-b border-gray-300 mb-2">
-      <button id="tab-dns" class="py-2 px-4 text-sm sm:text-base font-semibold border-b-2 border-blue-600" onclick="showTab('dns')">DNS Output</button>
-      <button id="tab-whois" class="py-2 px-4 text-sm sm:text-base font-semibold text-gray-600 hover:text-blue-600" onclick="showTab('whois')">WHOIS Output</button>
-      <button id="tab-ip" class="py-2 px-4 text-sm sm:text-base font-semibold text-gray-600 hover:text-blue-600" onclick="showTab('ip')">My IP</button>
-    </div>
           <button id="tab-dns" class="py-2 px-4 text-sm sm:text-base font-semibold border-b-2 border-blue-600" onclick="showTab('dns')">DNS Output</button>
           <button id="tab-whois" class="py-2 px-4 text-sm sm:text-base font-semibold text-gray-600 hover:text-blue-600" onclick="showTab('whois')">WHOIS Output</button>
         </div>
@@ -120,11 +88,6 @@
           <pre id="output" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-64 overflow-auto"></pre>
         </div>
         <div id="tab-content-whois" class="hidden">
-          <pre id="whoisOutput" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-64 overflow-auto">WHOIS lookup will appear here after a query.</pre>
-        </div>
-        <div id="tab-content-ip" class="hidden">
-          <pre id="ipOutput" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-64 overflow-auto">Click tab to get your public IP.</pre>
-        </div>
           <pre id="whoisOutput" class="bg-gray-100 p-3 sm:p-4 rounded text-sm whitespace-pre-wrap h-64 overflow-auto">WHOIS lookup will appear here after a query.</pre>
         </div>
       </div>
@@ -318,34 +281,6 @@ async function fetchWhois(domain) {
       document.getElementById('tab-whois').classList.add('border-b-2', 'border-blue-600');
       document.getElementById('tab-content-whois').classList.remove('hidden');
     }
-  }
-
-  function showTab(tab) {
-    ['dns', 'whois', 'ip'].forEach(t => {
-      document.getElementById(`tab-${t}`).classList.remove('border-b-2', 'border-blue-600', 'text-gray-600');
-      document.getElementById(`tab-content-${t}`).classList.add('hidden');
-    });
-
-    document.getElementById(`tab-${tab}`).classList.add('border-b-2', 'border-blue-600');
-    document.getElementById(`tab-${tab}`).classList.remove('text-gray-600');
-    document.getElementById(`tab-content-${tab}`).classList.remove('hidden');
-
-    if (tab === 'ip') {
-      fetchPublicIP();
-    }
-  }
-
-  function fetchPublicIP() {
-    const ipBox = document.getElementById("ipOutput");
-    ipBox.textContent = "Fetching your public IP...";
-    fetch("https://api.ipify.org?format=json")
-      .then(res => res.json())
-      .then(data => {
-        ipBox.textContent = `Your Public IP: ${data.ip}`;
-      })
-      .catch(err => {
-        ipBox.textContent = "Could not fetch IP address.";
-      });
   }
 </script>
 </body>
